@@ -16,6 +16,7 @@ resource "aws_instance" "ec2_instance" {
   user_data = <<-EOF
               #!/bin/bash
               yum update -y
+              yum install -y httpd mailx
               yum install -y httpd
               systemctl start httpd
               systemctl enable httpd
