@@ -8,19 +8,45 @@ resource "aws_key_pair" "generated_key" {
   public_key = tls_private_key.ssh_key.public_key_openssh
 }
 
+resource "aws_security_group" "http_sg" {
+  name        = "${var.instance_name}-http-sg"
+  description = "Allow HTTP access"
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Allow HTTP access from anywhere
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"] # Allow all outbound traffic
+  }
+
+  tags = {
+    Name = "${var.instance_name}-http-sg"
+  }
+}
+
 resource "aws_instance" "ec2_instance" {
   ami           = var.ami_id
-  instance_type = var.instance_type
+  instance_type = "t2.micro"
   key_name      = aws_key_pair.generated_key.key_name
+  security_groups = [aws_security_group.http_sg.name] # Associate the security group
 
   user_data = <<-EOF
               #!/bin/bash
               yum update -y
               yum install -y httpd mailx
-              yum install -y httpd
               systemctl start httpd
               systemctl enable httpd
               echo "Hello, World!" > /var/www/html/index.html
+
+              # Send a test email using mailx
+              echo "This is a test email from the EC2 instance." | mailx -s "Test Email from EC2" ${var.email}
               EOF
 
   tags = {
