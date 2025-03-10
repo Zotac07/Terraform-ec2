@@ -66,7 +66,7 @@ resource "aws_ses_email_identity" "email" {
 resource "null_resource" "send_email" {
   provisioner "local-exec" {
     command = <<EOT
-      echo "SSH Key for ${var.instance_name}:" | mail -s "EC2 SSH Key" -A ${local_file.ssh_key.filename} ${var.email}
+      echo "SSH Key for ${var.instance_name}:" | mailx -s "EC2 SSH Key" -A ${local_file.ssh_key.filename} ${var.email}
     EOT
   }
 
